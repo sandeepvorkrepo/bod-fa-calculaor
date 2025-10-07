@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Body Fat % Calculator</title>
+  <style>
+    :root{
+      --bg:#0f1724;
+      --card:#0b1220;
+      --muted:#9aa7b2;
+      --accent1:#7c3aed;
+      --accent2:#06b6d4;
+      --glass: rgba(255,255,255,0.04);
+      --success: #10b981;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg),#071224);color:#e6eef6}
+    .wrap{min-height:100vh;display:grid;place-items:center;padding:40px}
+    .container{width:100%;max-width:960px;display:grid;grid-template-columns:1fr 420px;gap:28px}
+
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:14px;padding:22px;box-shadow:0 8px 30px rgba(2,6,23,0.6);border:1px solid rgba(255,255,255,0.03)}
+    header.app-header{display:flex;gap:16px;align-items:center;margin-bottom:12px}
+    .logo{width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,var(--accent1),var(--accent2));display:grid;place-items:center;font-weight:700}
+    h1{margin:0;font-size:20px}
+    p.lead{margin:4px 0 0;color:var(--muted);font-size:13px}
+
+    form .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:14px}
+    label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+    .input,select{width:100%;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:var(--glass);color:inherit;font-size:14px}
+    .radio-row{display:flex;gap:8px;align-items:center}
+    .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;border:none;background:linear-gradient(90deg,var(--accent1),var(--accent2));color:white;font-weight:600;cursor:pointer}
+    .btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted);font-weight:600}
+
+    .result{display:grid;gap:10px;align-items:center;justify-items:center;padding:18px;border-radius:12px}
+    .ring{width:170px;height:170px;display:grid;place-items:center}
+    .big{font-size:28px;font-weight:700}
+    .small{font-size:13px;color:var(--muted)}
+
+    .info{font-size:13px;color:var(--muted);line-height:1.4}
+    .meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    .chip{background:rgba(255,255,255,0.02);padding:8px 10px;border-radius:999px;font-size:13px;border:1px solid rgba(255,255,255,0.02)}
+
+    footer.note{margin-top:12px;color:var(--muted);font-size:12px}
+
+    @media(max-width:880px){.container{grid-template-columns:1fr;}.card{padding:18px}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="container">
+      <section class="card" aria-labelledby="calc-title">
+        <header class="app-header">
+          <div class="logo">BF</div>
+          <div>
+            <h1 id="calc-title">Body Fat % Calculator</h1>
+            <p class="lead">Fast estimate using Navy formulas — enter measurements in centimeters and kilograms.</p>
+          </div>
+        </header>
+
+        <form id="calcForm" onsubmit="return false;">
+          <div class="grid">
+            <div>
+              <label for="weight">Weight (kg)</label>
+              <input id="weight" class="input" type="number" min="1" step="0.1" value="70" required />
+            </div>
+            <div>
+              <label for="height">Height (cm)</label>
+              <input id="height" class="input" type="number" min="50" step="0.1" value="175" required />
+            </div>
+            <div>
+              <label for="age">Age (years)</label>
+              <input id="age" class="input" type="number" min="10" max="120" value="30" />
+            </div>
+            <div>
+              <label>Gender</label>
+              <div class="radio-row">
+                <label><input type="radio" name="gender" value="male" checked> Male</label>
+                <label><input type="radio" name="gender" value="female"> Female</label>
+              </div>
+            </div>
+
+            <div>
+              <label for="neck">Neck circumference (cm)</label>
+              <input id="neck" class="input" type="number" min="10" step="0.1" value="38" />
+            </div>
+            <div>
+              <label for="waist">Waist circumference (cm)</label>
+              <input id="waist" class="input" type="number" min="10" step="0.1" value="86" />
+            </div>
+            <div style="grid-column:span 2">
+              <label for="hip">Hip circumference (cm) — required for females</label>
+              <input id="hip" class="input" type="number" min="10" step="0.1" value="98" />
+            </div>
+          </div>
+
+          <div style="display:flex;gap:10px;margin-top:16px;align-items:center">
+            <button class="btn" id="calcBtn">Calculate</button>
+            <button class="btn secondary" id="resetBtn" type="button">Reset</button>
+            <div style="margin-left:auto;color:var(--muted);font-size:13px">Units: kg & cm</div>
+          </div>
+        </form>
+
+        <footer class="note">Note: This is an estimate. For clinical accuracy consult a professional.</footer>
+      </section>
+
+      <aside class="card">
+        <div class="result" aria-live="polite">
+          <div class="ring">
+            <!-- SVG circular progress -->
+            <svg viewBox="0 0 36 36" width="170" height="170" id="progressSvg">
+              <defs>
+                <linearGradient id="g1" x1="0%" x2="100%">
+                  <stop offset="0%" stop-color="#7c3aed" />
+                  <stop offset="100%" stop-color="#06b6d4" />
+                </linearGradient>
+              </defs>
+              <path d="M18 2.0845
+                  a 15.9155 15.9155 0 0 1 0 31.831
+                  a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#0b1220" stroke-width="3.6"/>
+              <path id="progress" d="M18 2.0845
+                  a 15.9155 15.9155 0 0 1 0 31.831
+                  a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="url(#g1)" stroke-width="3.6" stroke-linecap="round" stroke-dasharray="0 100"/>
+              <text x="18" y="18" font-size="3.2" text-anchor="middle" alignment-baseline="middle" fill="#e6eef6" id="pctText">--%</text>
+            </svg>
+          </div>
+
+          <div style="text-align:center">
+            <div class="big" id="bfValue">--%</div>
+            <div class="small" id="catText">Enter data and press Calculate</div>
+          </div>
+
+          <div class="meta" id="metaData">
+            <div class="chip" id="bmiChip">BMI: --</div>
+            <div class="chip" id="leanChip">Lean Mass est: -- kg</div>
+            <div class="chip" id="notesChip">—</div>
+          </div>
+
+        </div>
+
+        <div style="margin-top:14px" class="info">
+          <strong>How to measure</strong>
+          <ul style="margin:8px 0 0 18px;color:var(--muted)">
+            <li>Neck: just below the Adam's apple</li>
+            <li>Waist: at the navel or narrowest point (keep consistent)</li>
+            <li>Hips: widest part of the buttocks (female)</li>
+          </ul>
+        </div>
+
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    // Utilities
+    const $ = id => document.getElementById(id);
+    const qs = sel => document.querySelector(sel);
+
+    function toNumber(v){ const n = parseFloat(v); return Number.isFinite(n) ? n : 0; }
+
+    function navyBodyFat({gender, heightCm, neckCm, waistCm, hipCm}){
+      // formulas expect cm
+      if(gender === 'male'){
+        // 86.010 * log10(waist - neck) - 70.041 * log10(height) + 36.76
+        const a = 86.010 * Math.log10(Math.max(waistCm - neckCm, 1));
+        const b = 70.041 * Math.log10(Math.max(heightCm, 1));
+        return a - b + 36.76;
+      } else {
+        // 163.205 * log10(waist + hip - neck) - 97.684 * log10(height) - 78.387
+        const a = 163.205 * Math.log10(Math.max(waistCm + hipCm - neckCm, 1));
+        const b = 97.684 * Math.log10(Math.max(heightCm, 1));
+        return a - b - 78.387;
+      }
+    }
+
+    function categoryFromBF(gender,bf){
+      // Simple categorization — approximate
+      if(gender === 'male'){
+        if(bf < 6) return 'Essential fat';
+        if(bf < 14) return 'Athlete/Fit';
+        if(bf < 18) return 'Fitness';
+        if(bf < 25) return 'Average';
+        return 'Obese';
+      } else {
+        if(bf < 14) return 'Essential fat';
+        if(bf < 21) return 'Athlete/Fit';
+        if(bf < 25) return 'Fitness';
+        if(bf < 32) return 'Average';
+        return 'Obese';
+      }
+    }
+
+    function setProgress(pct){
+      pct = Math.max(0, Math.min(100, pct));
+      const path = $('progress');
+      // stroke-dasharray uses percentage of circumference. 100 -> full
+      path.setAttribute('stroke-dasharray', pct + ' 100');
+      $('pctText').textContent = Math.round(pct) + '%';
+    }
+
+    function calcAndShow(){
+      const weight = toNumber($('weight').value);
+      const height = toNumber($('height').value);
+      const age = toNumber($('age').value);
+      const neck = toNumber($('neck').value);
+      const waist = toNumber($('waist').value);
+      const hip = toNumber($('hip').value);
+      const gender = document.querySelector('input[name="gender"]:checked').value;
+
+      // Basic validations
+      if(height <= 0 || neck <= 0 || waist <= 0){
+        alert('Please enter positive values for height, neck and waist.');
+        return;
+      }
+      if(gender === 'female' && hip <= 0){
+        alert('For females, hip measurement is required.');
+        return;
+      }
+
+      const bf = navyBodyFat({gender, heightCm:height, neckCm:neck, waistCm:waist, hipCm:hip});
+      const bfRounded = Math.max(0, +bf.toFixed(1));
+
+      // BMI
+      const heightM = height / 100;
+      const bmi = weight > 0 && heightM > 0 ? (weight / (heightM*heightM)) : 0;
+
+      // Lean mass estimate
+      const leanMass = Math.max(0, weight * (1 - bfRounded/100));
+
+      // Update UI
+      $('bfValue').textContent = bfRounded + '%';
+      $('catText').textContent = categoryFromBF(gender,bfRounded);
+      $('bmiChip').textContent = 'BMI: ' + (bmi ? bmi.toFixed(1) : '--');
+      $('leanChip').textContent = 'Lean mass est: ' + (leanMass ? leanMass.toFixed(1) + ' kg' : '--');
+      $('notesChip').textContent = age ? ('Age: ' + age + ' yrs') : '—';
+
+      // use BF range to set progress ring (map 0-40% to 0-100)
+      const pct = Math.min(100, Math.round((bfRounded / 40) * 100));
+      setProgress(pct);
+
+      // small visual tweak to progress color depending on category
+      const cat = categoryFromBF(gender,bfRounded);
+      const prog = $('progress');
+      if(cat.includes('Obese')){
+        prog.setAttribute('stroke', '#f97316'); // amber
+      } else if(cat.includes('Essential') || cat.includes('Athlete')){
+        prog.setAttribute('stroke', 'url(#g1)');
+      } else if(cat.includes('Average')){
+        prog.setAttribute('stroke', '#ef4444');
+      } else {
+        prog.setAttribute('stroke', 'url(#g1)');
+      }
+
+    }
+
+    // events
+    $('calcBtn').addEventListener('click', calcAndShow);
+    $('resetBtn').addEventListener('click', () => {
+      $('weight').value = 70; $('height').value = 175; $('age').value = 30; $('neck').value = 38; $('waist').value = 86; $('hip').value = 98; document.querySelector('input[name="gender"][value="male"]').checked = true;
+      $('bfValue').textContent='--%'; $('catText').textContent='Enter data and press Calculate'; $('bmiChip').textContent='BMI: --'; $('leanChip').textContent='Lean Mass est: -- kg'; $('notesChip').textContent='—'; setProgress(0);
+    });
+
+    // keyboard: Enter within inputs triggers calc
+    document.getElementById('calcForm').addEventListener('keydown', e => {
+      if(e.key === 'Enter'){
+        e.preventDefault(); calcAndShow();
+      }
+    });
+
+    // initial reset
+    setProgress(0);
+  </script>
+</body>
+</html>
