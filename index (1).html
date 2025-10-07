@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Body Fat Percentage Calculator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Bod Fa Percentage Calculator</h2>
+        <form id="bfForm">
+            <label for="gender">Gender:</label>
+            <select id="gender" name="gender" required>
+                <option value="">Select...</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+            </select>
+
+            <label for="age">Age (years):</label>
+            <input type="number" id="age" name="age" min="1" max="120" required>
+
+            <label for="height">Height (cm):</label>
+            <input type="number" id="height" name="height" min="50" max="250" required>
+
+            <label for="weight">Weight (kg):</label>
+            <input type="number" id="weight" name="weight" min="10" max="300" required>
+
+            <label for="waist">Waist (cm):</label>
+            <input type="number" id="waist" name="waist" min="20" max="200" required>
+
+            <label for="neck">Neck (cm):</label>
+            <input type="number" id="neck" name="neck" min="10" max="70" required>
+
+            <div id="femaleFields" style="display:none;">
+                <label for="hip">Hip (cm):</label>
+                <input type="number" id="hip" name="hip" min="20" max="200">
+            </div>
+            
+            <button type="button" id="calculateBtn">Calculate</button>
+        </form>
+
+        <div id="result"></div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
